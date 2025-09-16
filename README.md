@@ -1,4 +1,7 @@
+
 # Minesweeper (Сапёр)
+
+**Packagist:** [https://packagist.org/packages/openeeer/minesweeper](https://packagist.org/packages/openeeer/minesweeper)
 
 ## Описание
 
