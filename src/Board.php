@@ -12,6 +12,7 @@ class Board
     private int $mines;
     private array $cells = [];
     private ConsoleOutput $output;
+    private array $minesPositions = [];
 
     public function __construct(int $rows, int $cols, int $mines, ConsoleOutput $output)
     {
@@ -42,12 +43,14 @@ class Board
 
     private function placeMines(): void
     {
+        $this->minesPositions = [];
         $placed = 0;
         while ($placed < $this->mines) {
             $r = rand(0, $this->rows - 1);
             $c = rand(0, $this->cols - 1);
             if (!$this->cells[$r][$c]->isMine) {
                 $this->cells[$r][$c]->isMine = true;
+                $this->minesPositions[] = ['row' => $r, 'col' => $c];
                 $placed++;
             }
         }
@@ -109,6 +112,32 @@ class Board
             }
         }
         return true;
+    }
+
+    public function getMinesPositions(): array
+    {
+        return $this->minesPositions;
+    }
+
+    public function setMinesPositions(array $minesPositions): void
+    {
+        // Очищаем существующие мины
+        for ($i = 0; $i < $this->rows; $i++) {
+            for ($j = 0; $j < $this->cols; $j++) {
+                $this->cells[$i][$j]->isMine = false;
+                $this->cells[$i][$j]->isOpen = false;
+                $this->cells[$i][$j]->isFlagged = false;
+            }
+        }
+
+        // Устанавливаем мины в нужные позиции
+        $this->minesPositions = $minesPositions;
+        foreach ($minesPositions as $position) {
+            $this->cells[$position['row']][$position['col']]->isMine = true;
+        }
+
+        // Пересчитываем соседние мины
+        $this->calculateAdjacentMines();
     }
 
 
