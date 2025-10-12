@@ -10,8 +10,18 @@ class Database
     private PDO $pdo;
     private string $dbPath;
 
-    public function __construct(string $dbPath = 'bin/minesweeper.db')
+    public function __construct(string $dbPath = null)
     {
+        // База будет храниться в %APPDATA%\Minesweeper\minesweeper.db
+        if ($dbPath === null) {
+            $appData = getenv('APPDATA') ?: __DIR__;
+            $dbDir = $appData . DIRECTORY_SEPARATOR . 'Minesweeper';
+            if (!is_dir($dbDir)) {
+                mkdir($dbDir, 0777, true);
+            }
+            $dbPath = $dbDir . DIRECTORY_SEPARATOR . 'minesweeper.db';
+        }
+
         $this->dbPath = $dbPath;
         $this->connect();
         $this->createTables();
@@ -29,7 +39,6 @@ class Database
 
     private function createTables(): void
     {
-        // Таблица для игр
         $gamesTable = "
             CREATE TABLE IF NOT EXISTS games (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +52,6 @@ class Database
             )
         ";
 
-        // Таблица для ходов
         $movesTable = "
             CREATE TABLE IF NOT EXISTS moves (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
