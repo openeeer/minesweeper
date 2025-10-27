@@ -72,8 +72,13 @@ class Database
         }
     }
 
-    public function saveGame(string $playerName, int $boardSize, int $minesCount, array $minesPositions, string $gameResult): int
-    {
+    public function saveGame(
+        string $playerName,
+        int $boardSize,
+        int $minesCount,
+        array $minesPositions,
+        string $gameResult
+    ): int {
         $datePlayed = date('Y-m-d H:i:s');
         $minesPositionsJson = json_encode($minesPositions);
 

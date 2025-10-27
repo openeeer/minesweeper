@@ -6,10 +6,10 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
 class GameReplay
 {
-    private Database $database;
+    private DatabaseORM $database;
     private ConsoleOutput $output;
 
-    public function __construct(Database $database, ConsoleOutput $output)
+    public function __construct(DatabaseORM $database, ConsoleOutput $output)
     {
         $this->database = $database;
         $this->output = $output;
@@ -18,7 +18,7 @@ class GameReplay
     public function replayGame(int $gameId): void
     {
         $gameData = $this->database->getGameWithMoves($gameId);
-        
+
         if (!$gameData) {
             $this->output->writeln("\e[31mИгра с ID {$gameId} не найдена!\e[0m");
             return;
@@ -57,8 +57,10 @@ class GameReplay
 
         // Воспроизводим ходы
         foreach ($gameData['moves'] as $move) {
-            $this->output->writeln("\n\e[33mХод {$move['move_number']}: ({$move['row_coord']}, {$move['col_coord']}) - {$move['result']}\e[0m");
-            
+            $moveInfo = "Ход {$move['move_number']}: "
+                . "({$move['row_coord']}, {$move['col_coord']}) - {$move['result']}";
+            $this->output->writeln("\n\e[33m{$moveInfo}\e[0m");
+
             if ($move['result'] === 'взорвался') {
                 $board->openCell($move['row_coord'], $move['col_coord']);
                 $board->render(true, ['row' => $move['row_coord'], 'col' => $move['col_coord']]);

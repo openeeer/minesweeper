@@ -3,19 +3,20 @@
 namespace Openeeer\Minesweeper;
 
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class GameManager
 {
-    private Database $database;
+    private DatabaseORM $database;
     private GameRecorder $recorder;
     private GameReplay $replay;
     private ConsoleOutput $output;
 
     public function __construct()
     {
-        $this->database = new Database();
+        $this->database = new DatabaseORM();
         $this->recorder = new GameRecorder($this->database);
-        $this->output = new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, true);
+        $this->output = new ConsoleOutput(OutputInterface::VERBOSITY_NORMAL, true);
         $this->replay = new GameReplay($this->database, $this->output);
     }
 
@@ -116,13 +117,16 @@ class GameManager
 
             // Проверка выхода за пределы поля
             if ($r < 0 || $r >= $size || $c < 0 || $c >= $size) {
-                $this->output->writeln("\e[33mКоординаты вне игрового поля! Введите значения от 0 до " . ($size - 1) . ".\e[0m");
+                $maxCoord = $size - 1;
+                $this->output->writeln(
+                    "\e[33mКоординаты вне игрового поля! Введите значения от 0 до {$maxCoord}.\e[0m"
+                );
                 continue;
             }
 
             if ($action === "o") {
                 $safe = $board->openCell($r, $c);
-                
+
                 // Записываем ход
                 if ($safe) {
                     if ($board->checkWin()) {
@@ -153,64 +157,64 @@ class GameManager
     }
 
     private function showGamesList(): void
-{
-    $this->output->writeln("\e[36m=== СПИСОК СОХРАНЕННЫХ ПАРТИЙ ===\e[0m");
+    {
+        $this->output->writeln("\e[36m=== СПИСОК СОХРАНЕННЫХ ПАРТИЙ ===\e[0m");
 
-    $games = $this->database->getAllGames();
+        $games = $this->database->getAllGames();
 
-    if (empty($games)) {
-        $this->output->writeln("Сохраненных партий не найдено.\n");
-        return;
-    }
+        if (empty($games)) {
+            $this->output->writeln("Сохраненных партий не найдено.\n");
+            return;
+        }
 
     // Заголовки
-    $headers = ['ID', 'Игрок', 'Дата', 'Размер', 'Мины', 'Результат'];
+        $headers = ['ID', 'Игрок', 'Дата', 'Размер', 'Мины', 'Результат'];
 
     // Подготавливаем данные таблицы
-    $rows = [];
-    foreach ($games as $game) {
-        $rows[] = [
+        $rows = [];
+        foreach ($games as $game) {
+            $rows[] = [
             (string)$game['id'],
             $game['player_name'],
             date('d.m.Y H:i', strtotime($game['date_played'])),
             $game['board_size'] . 'x' . $game['board_size'],
             (string)$game['mines_count'],
             $game['game_result'],
-        ];
-    }
+            ];
+        }
 
     // Вычисляем максимальную ширину каждой колонки
-    $widths = [];
-    foreach ($headers as $i => $header) {
-        $widths[$i] = mb_strlen($header);
-        foreach ($rows as $row) {
-            $widths[$i] = max($widths[$i], mb_strlen($row[$i]));
+        $widths = [];
+        foreach ($headers as $i => $header) {
+            $widths[$i] = mb_strlen($header);
+            foreach ($rows as $row) {
+                $widths[$i] = max($widths[$i], mb_strlen($row[$i]));
+            }
+            $widths[$i] += 2; // немного отступа для визуала
         }
-        $widths[$i] += 2; // немного отступа для визуала
-    }
 
     // Функция для вывода строки с учётом UTF-8
-    $formatRow = function (array $columns) use ($widths): string {
-        $out = '';
-        foreach ($columns as $i => $col) {
-            $pad = $widths[$i] - mb_strlen($col);
-            $out .= $col . str_repeat(' ', $pad);
-        }
-        return $out;
-    };
+        $formatRow = function (array $columns) use ($widths): string {
+            $out = '';
+            foreach ($columns as $i => $col) {
+                $pad = $widths[$i] - mb_strlen($col);
+                $out .= $col . str_repeat(' ', $pad);
+            }
+            return $out;
+        };
 
     // Печать таблицы
-    $this->output->writeln($formatRow($headers));
-    $this->output->writeln(str_repeat('-', array_sum($widths)));
+        $this->output->writeln($formatRow($headers));
+        $this->output->writeln(str_repeat('-', array_sum($widths)));
 
-    foreach ($rows as $row) {
-        $this->output->writeln($formatRow($row));
+        foreach ($rows as $row) {
+            $this->output->writeln($formatRow($row));
+        }
+
+        $this->output->writeln("");
     }
 
-    $this->output->writeln("");
-}
 
-    
     private function replayGame(): void
     {
         $this->output->writeln("\e[36m=== ПОВТОР ПАРТИИ ===\e[0m");

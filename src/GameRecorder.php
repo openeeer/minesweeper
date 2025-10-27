@@ -4,7 +4,7 @@ namespace Openeeer\Minesweeper;
 
 class GameRecorder
 {
-    private Database $database;
+    private DatabaseORM $database;
     private ?int $currentGameId = null;
     private int $moveNumber = 0;
     private array $minesPositions = [];
@@ -13,7 +13,7 @@ class GameRecorder
     private int $boardSize = 0;
     private int $minesCount = 0;
 
-    public function __construct(Database $database)
+    public function __construct(DatabaseORM $database)
     {
         $this->database = $database;
     }

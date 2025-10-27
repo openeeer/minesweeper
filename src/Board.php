@@ -22,7 +22,11 @@ class Board
         $this->output = $output;
 
         $this->output->getFormatter()->setStyle('mine', new OutputFormatterStyle('white', 'red', ['bold']));
-        $this->output->getFormatter()->setStyle('exploded', new OutputFormatterStyle('black', 'yellow', ['bold'])); // взорванная мина
+        // взорванная мина
+        $this->output->getFormatter()->setStyle(
+            'exploded',
+            new OutputFormatterStyle('black', 'yellow', ['bold'])
+        );
         $this->output->getFormatter()->setStyle('flag', new OutputFormatterStyle('yellow', null, ['bold']));
         $this->output->getFormatter()->setStyle('number1', new OutputFormatterStyle('green', null));
         $this->output->getFormatter()->setStyle('number2', new OutputFormatterStyle('blue', null));
@@ -60,12 +64,16 @@ class Board
     {
         for ($i = 0; $i < $this->rows; $i++) {
             for ($j = 0; $j < $this->cols; $j++) {
-                if ($this->cells[$i][$j]->isMine) continue;
+                if ($this->cells[$i][$j]->isMine) {
+                    continue;
+                }
                 $count = 0;
                 for ($x = $i - 1; $x <= $i + 1; $x++) {
                     for ($y = $j - 1; $y <= $j + 1; $y++) {
                         if ($x >= 0 && $x < $this->rows && $y >= 0 && $y < $this->cols) {
-                            if ($this->cells[$x][$y]->isMine) $count++;
+                            if ($this->cells[$x][$y]->isMine) {
+                                $count++;
+                            }
                         }
                     }
                 }
@@ -76,18 +84,26 @@ class Board
 
     public function openCell(int $row, int $col): bool
     {
-        if ($row < 0 || $row >= $this->rows || $col < 0 || $col >= $this->cols) return true;
+        if ($row < 0 || $row >= $this->rows || $col < 0 || $col >= $this->cols) {
+            return true;
+        }
         $cell = $this->cells[$row][$col];
-        if ($cell->isOpen || $cell->isFlagged) return true;
+        if ($cell->isOpen || $cell->isFlagged) {
+            return true;
+        }
 
         $cell->isOpen = true;
 
-        if ($cell->isMine) return false;
+        if ($cell->isMine) {
+            return false;
+        }
 
         if ($cell->adjacentMines === 0) {
             for ($x = $row - 1; $x <= $row + 1; $x++) {
                 for ($y = $col - 1; $y <= $col + 1; $y++) {
-                    if ($x === $row && $y === $col) continue;
+                    if ($x === $row && $y === $col) {
+                        continue;
+                    }
                     $this->openCell($x, $y);
                 }
             }
@@ -98,9 +114,13 @@ class Board
 
     public function toggleFlag(int $row, int $col): void
     {
-        if ($row < 0 || $row >= $this->rows || $col < 0 || $col >= $this->cols) return;
+        if ($row < 0 || $row >= $this->rows || $col < 0 || $col >= $this->cols) {
+            return;
+        }
         $cell = $this->cells[$row][$col];
-        if (!$cell->isOpen) $cell->isFlagged = !$cell->isFlagged;
+        if (!$cell->isOpen) {
+            $cell->isFlagged = !$cell->isFlagged;
+        }
     }
 
     public function checkWin(): bool
@@ -108,7 +128,9 @@ class Board
         for ($i = 0; $i < $this->rows; $i++) {
             for ($j = 0; $j < $this->cols; $j++) {
                 $cell = $this->cells[$i][$j];
-                if (!$cell->isMine && !$cell->isOpen) return false;
+                if (!$cell->isMine && !$cell->isOpen) {
+                    return false;
+                }
             }
         }
         return true;
@@ -133,7 +155,20 @@ class Board
         // Устанавливаем мины в нужные позиции
         $this->minesPositions = $minesPositions;
         foreach ($minesPositions as $position) {
-            $this->cells[$position['row']][$position['col']]->isMine = true;
+            // Поддерживаем оба формата: ['row' => x, 'col' => y] и [x, y]
+            if (isset($position['row']) && isset($position['col'])) {
+                $row = $position['row'];
+                $col = $position['col'];
+            } elseif (is_array($position) && count($position) >= 2) {
+                $row = $position[0];
+                $col = $position[1];
+            } else {
+                continue; // Пропускаем некорректные позиции
+            }
+
+            if ($row >= 0 && $row < $this->rows && $col >= 0 && $col < $this->cols) {
+                $this->cells[$row][$col]->isMine = true;
+            }
         }
 
         // Пересчитываем соседние мины
@@ -143,7 +178,7 @@ class Board
 
     public function render(bool $revealMines = false, ?array $exploded = null): void
     {
-        $leftWidth = strlen((string)($this->rows - 1)) + 1; 
+        $leftWidth = strlen((string)($this->rows - 1)) + 1;
 
         $this->output->writeln(str_repeat(" ", $leftWidth) . implode(" ", range(0, $this->cols - 1)));
 

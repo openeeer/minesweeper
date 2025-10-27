@@ -1,10 +1,11 @@
 {
     "name": "openeeer/minesweeper",
     "description": "Console Game Minesweeper with SQLite database support",
-    "version": "3.2.0",
+    "version": "3.3.0",
     "require": {
         "wp-cli/php-cli-tools": "^0.12.6",
-        "symfony/console": "^7.3"
+        "symfony/console": "^7.3",
+        "gabordemooij/redbean": "^5.7"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^4.0",
